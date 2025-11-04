@@ -13,11 +13,22 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'lcov', 'html'],
       thresholds: {
-        lines: 0.9,
-        functions: 0.9,
-        branches: 0.9,
-        statements: 0.9,
+        lines: 90,
+        functions: 90,
+        branches: 90,
+        statements: 90,
+        100: false, // Don't require 100% coverage, just the thresholds above
       },
+      all: true, // Include all files in coverage calculation
+      exclude: [
+        'node_modules/**',
+        'src/tests/**',
+        '**/*.d.ts',
+        '**/*.config.*',
+        '**/mockData/**',
+        'dist/**',
+        'coverage/**',
+      ],
     },
     include: ['src/**/*.test.{ts,tsx}'],
   },
