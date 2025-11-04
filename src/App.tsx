@@ -1,4 +1,4 @@
-import { MapTiler3DMap, MapPoint } from './components/MapComponent'
+import { MapTiler3DMap, type MapPoint } from './components/MapComponent'
 import './App.css'
 
 function App() {
