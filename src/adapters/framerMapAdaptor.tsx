@@ -1,6 +1,6 @@
-import * as React from 'react';
+//import * as React from 'react';
 import { addPropertyControls, ControlType } from 'framer';
-import { MapTiler3DMap } from '../components/MapComponent';
+import { MapTiler3DMap} from '../components/MapComponent';
 
 // Make it configurable in Framer’s right sidebar
 addPropertyControls(MapTiler3DMap, {
@@ -12,7 +12,7 @@ addPropertyControls(MapTiler3DMap, {
   points: {
     type: ControlType.Array,
     title: 'Locations',
-    propertyControl: {
+    control: {
       type: ControlType.Object,
       controls: {
         title: { type: ControlType.String, title: 'Name' },

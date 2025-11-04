@@ -476,6 +476,7 @@ export const MapTiler3DMap: React.FC<MapTiler3DMapProps> = React.memo(
 
         {/* Overlay loader */}
         <div
+          id="map-overlay"
           style={{
             position: 'absolute',
             inset: 0,

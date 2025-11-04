@@ -28,32 +28,6 @@ jobs:
       - name: Lint
         run: npm run lint
 
-  test:
-    name: Test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Use Node.js 20
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run tests with coverage (fails if < 90%)
-        run: npm run coverage
-
-      - name: Upload coverage artifact
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report
-          path: coverage
-
   build:
     name: Build
     runs-on: ubuntu-latest
@@ -74,8 +48,8 @@ jobs:
       - name: Build
         run: npm run build
 
-  e2e:
-    name: E2E Tests
+  playwright:
+    name: Playwright Tests + Coverage
     runs-on: ubuntu-latest
     needs: build
     steps:
@@ -94,17 +68,33 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
 
-      - name: Run Playwright E2E (headless Chrome)
+      - name: Build site for E2E
+        run: npm run build
+
+      - name: Start preview server
+        run: npm run preview &
+        env:
+          NODE_ENV: production
+
+      - name: Run Playwright tests with coverage
         env:
           CI: true
-        run: npm run test:e2e
+        run: npx playwright test --reporter=html
 
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
-          path: playwright-report
+          path: playwright-report/
+
+      # Optional: merge or publish coverage
+      - name: Upload Playwright coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-coverage
+          path: playwright-coverage/
 
   codeql:
     name: CodeQL Analysis

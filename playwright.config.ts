@@ -1,26 +1,16 @@
-import { defineConfig, devices } from '@playwright/test';
+import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
-  testDir: 'src/tests/e2e',
-  fullyParallel: true,
-  reporter: [['list'], ['html', { outputFolder: 'playwright-report', open: 'never' }]],
+  testDir: '.',
   use: {
-    baseURL: 'http://localhost:4173',
-    browserName: 'chromium',
+    baseURL: 'http://localhost:4173',   // vite preview default
     headless: true,
-    trace: 'on-first-retry',
   },
-  // Start a preview server after build and before tests
   webServer: {
-    command: 'vite preview --strictPort --port=4173',
-    url: 'http://localhost:4173',
-    reuseExistingServer: true,
-    timeout: 120_000,
+    command: 'npm run preview',          // start server
+    url: 'http://localhost:4173',        // wait for this to respond
+    timeout: 120 * 1000,                 // 2 minutes
+    reuseExistingServer: !process.env.CI // don’t restart locally
   },
-  projects: [
-    {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
-    },
-  ],
+  reporter: [['list'], ['html', { outputFolder: 'playwright-report' }]],
 });
