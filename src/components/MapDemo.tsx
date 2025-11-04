@@ -1,20 +1,20 @@
-import React from 'react'
+import React from 'react';
 
-export type LatLng = { lat: number; lng: number }
+export type LatLng = { lat: number; lng: number };
 
 export type DemoMarker = {
-  id: string
-  position: LatLng
-  label?: string
-}
+  id: string;
+  position: LatLng;
+  label?: string;
+};
 
 export interface MapDemoProps {
-  center?: LatLng
-  zoom?: number
-  markers?: DemoMarker[]
-  onMarkerClick?: (marker: DemoMarker) => void
-  title?: string
-  enableInteraction?: boolean
+  center?: LatLng;
+  zoom?: number;
+  markers?: DemoMarker[];
+  onMarkerClick?: (marker: DemoMarker) => void;
+  title?: string;
+  enableInteraction?: boolean;
 }
 
 const containerStyle: React.CSSProperties = {
@@ -24,7 +24,7 @@ const containerStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
   gap: 8,
-}
+};
 
 const pillStyle: React.CSSProperties = {
   display: 'inline-block',
@@ -33,7 +33,7 @@ const pillStyle: React.CSSProperties = {
   background: '#eef2ff',
   color: '#3730a3',
   fontSize: 12,
-}
+};
 
 const listItemStyle: React.CSSProperties = {
   display: 'flex',
@@ -43,10 +43,10 @@ const listItemStyle: React.CSSProperties = {
   border: '1px solid #eee',
   borderRadius: 6,
   cursor: 'pointer',
-}
+};
 
 export default function MapDemo(props: MapDemoProps) {
-  const { center, zoom = 3, markers = [], onMarkerClick, title, enableInteraction = true } = props
+  const { center, zoom = 3, markers = [], onMarkerClick, title, enableInteraction = true } = props;
 
   return (
     <div style={containerStyle}>
@@ -96,7 +96,5 @@ export default function MapDemo(props: MapDemoProps) {
         ))}
       </div>
     </div>
-  )
+  );
 }
-
-

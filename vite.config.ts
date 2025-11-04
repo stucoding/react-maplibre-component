@@ -1,6 +1,6 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import type { UserConfig } from 'vite'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import type { UserConfig } from 'vite';
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -32,4 +32,4 @@ export default defineConfig({
     },
     include: ['src/**/*.test.{ts,tsx}'],
   },
-} as UserConfig)
+} as UserConfig);

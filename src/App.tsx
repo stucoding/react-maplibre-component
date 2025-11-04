@@ -1,5 +1,5 @@
-import { MapTiler3DMap, type MapPoint } from './components/MapComponent'
-import './App.css'
+import { MapTiler3DMap, type MapPoint } from './components/MapComponent';
+import './App.css';
 
 function App() {
   // Sample map points for testing
@@ -22,7 +22,7 @@ function App() {
       pin: 'https://api.maptiler.com/maps/dataviz/markers/pin-2.png',
       image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400',
     },
-  ]
+  ];
 
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
@@ -39,14 +39,14 @@ function App() {
           bearing: -90,
         }}
         onMarkerClick={(point, index) => {
-          console.log('Marker clicked:', point, index)
+          console.log('Marker clicked:', point, index);
         }}
         onMapReady={() => {
-          console.log('Map is ready!')
+          console.log('Map is ready!');
         }}
       />
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
