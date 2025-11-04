@@ -1,34 +1,51 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { MapTiler3DMap, MapPoint } from './components/MapComponent'
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
+  // Sample map points for testing
+  const samplePoints: MapPoint[] = [
+    {
+      id: '1',
+      lat: 46.68006894117724,
+      lng: 8.763649918607726,
+      title: 'Swiss Alps',
+      infoText: 'Beautiful mountain view in the Swiss Alps',
+      pin: 'https://api.maptiler.com/maps/dataviz/markers/pin-1.png',
+      image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400',
+    },
+    {
+      id: '2',
+      lat: 46.51,
+      lng: 9.01,
+      title: 'Swiss Valley',
+      infoText: 'Scenic valley location',
+      pin: 'https://api.maptiler.com/maps/dataviz/markers/pin-2.png',
+      image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400',
+    },
+  ]
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
+      <MapTiler3DMap
+        apiKey="ltzFbUmxmYsIaKJ0ybNR"
+        points={samplePoints}
+        mapName="outdoor"
+        rotating={true}
+        bgColor="#3b82f6"
+        camera={{
+          center: [8.763649918607726, 46.68006894117724],
+          zoom: 12,
+          pitch: 50,
+          bearing: -90,
+        }}
+        onMarkerClick={(point, index) => {
+          console.log('Marker clicked:', point, index)
+        }}
+        onMapReady={() => {
+          console.log('Map is ready!')
+        }}
+      />
+    </div>
   )
 }
 

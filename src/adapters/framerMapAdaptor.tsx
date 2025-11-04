@@ -1,62 +1,57 @@
-import React, { useMemo } from 'react'
-import MapDemo from '../components/MapDemo'
-
-export type FramerControlType = 'string' | 'number' | 'boolean'
-
-export type FramerControls = Record<string, { type: FramerControlType; title?: string }>
-
-export interface FramerAdaptorProps {
-  centerLat?: number
-  centerLng?: number
-  zoom?: number
-  title?: string
-  enableInteraction?: boolean
-  markers?: any
-  onMarkerClick?: (marker: any) => void
-  [key: string]: any
-}
-
-export function createFramerMapAdaptor(MapComponent: React.FC<any>) {
-  const Wrapped: React.FC<FramerAdaptorProps> & { framerControls: FramerControls } = (
-    props,
-  ) => {
-    const { centerLat, centerLng, zoom, markers, onMarkerClick, ...rest } = props
-
-    const center = useMemo(() => {
-      if (rest.center && typeof rest.center === 'object') return rest.center
-      if (typeof centerLat === 'number' && typeof centerLng === 'number') {
-        return { lat: centerLat, lng: centerLng }
-      }
-      return undefined
-    }, [rest.center, centerLat, centerLng])
-
-    const forwardedProps = useMemo(
-      () => ({
-        ...rest,
-        ...(center ? { center } : {}),
-        ...(typeof zoom === 'number' ? { zoom } : {}),
-        ...(markers !== undefined ? { markers } : {}),
-        ...(onMarkerClick ? { onMarkerClick } : {}),
-      }),
-      [rest, center, zoom, markers, onMarkerClick],
-    )
-
-    return <MapComponent {...forwardedProps} />
-  }
-
-  Wrapped.framerControls = {
-    centerLat: { type: 'number', title: 'Center Latitude' },
-    centerLng: { type: 'number', title: 'Center Longitude' },
-    zoom: { type: 'number', title: 'Zoom' },
-    title: { type: 'string', title: 'Title' },
-    enableInteraction: { type: 'boolean', title: 'Enable Interaction' },
-  }
-
-  return Wrapped
-}
-
-export const MapAdaptor = createFramerMapAdaptor(MapDemo)
-
-export default MapAdaptor
+import * as React from "react"
+import { addPropertyControls, ControlType } from "framer"
+import { MapTiler3DMap } from "../components/MapComponent"
 
 
+// Make it configurable in Framer’s right sidebar
+addPropertyControls(MapTiler3DMap, {
+    apiKey: {
+        type: ControlType.String,
+        title: "MapTiler API Key",
+        defaultValue: "ltzFbUmxmYsIaKJ0ybNR",
+    },
+    points: {
+        type: ControlType.Array,
+        title: "Locations",
+        propertyControl: {
+            type: ControlType.Object,
+            controls: {
+                title: { type: ControlType.String, title: "Name" },
+                lat: { type: ControlType.Number, title: "Latitude" },
+                lng: { type: ControlType.Number, title: "Longitude" },
+                pin: { type: ControlType.Image, title: "Pin Icon" },
+                image: { type: ControlType.Image, title: "Image" },
+                url: { type: ControlType.String, title: "URL" },
+                infoText: { type: ControlType.String, title: "Info text" },
+            },
+        },
+    },
+    mapName: {
+        type: ControlType.Enum,
+        title: "Map Style",
+        options: [
+            "hybrid",
+            "outdoor",
+            "winter",
+            "satellite",
+            "landscape-v4",
+            "dataviz",
+        ],
+        optionTitles: [
+            "Hybrid",
+            "Outdoor",
+            "Winter",
+            "Satellite",
+            "Landscape",
+            "Data Viz",
+        ],
+    },
+    rotating: {
+        type: ControlType.Boolean,
+        title: "Rotation",
+    },
+    bgColor: {
+        type: ControlType.Color,
+        title: "Button Color",
+    },
+})
