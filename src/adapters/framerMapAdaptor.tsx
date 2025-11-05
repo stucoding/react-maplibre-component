@@ -1,5 +1,5 @@
 //import * as React from 'react';
-import { addPropertyControls, ControlType } from 'framer';
+/*import { addPropertyControls, ControlType } from 'framer';
 import { MapTiler3DMap} from '../components/MapComponent';
 
 // Make it configurable in Framer’s right sidebar
@@ -40,3 +40,4 @@ addPropertyControls(MapTiler3DMap, {
     title: 'Button Color',
   },
 });
+*/
