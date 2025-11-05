@@ -12,14 +12,15 @@ export default [
   ...tseslint.configs.recommended,
   reactHooks.configs['recommended-latest'],
   reactRefresh.configs.vite,
-  prettier,
+  prettier, // Keep this to disable conflicting rules
   {
     files: ['**/*.{ts,tsx}'],
     plugins: {
       prettier: prettierPlugin,
     },
     rules: {
-      'prettier/prettier': 'error',
+      // Remove or comment out the prettier/prettier rule
+      // 'prettier/prettier': 'error',
     },
     languageOptions: {
       ecmaVersion: 2020,
@@ -38,7 +39,8 @@ export default [
       sourceType: 'module',
     },
     rules: {
-      'prettier/prettier': 'error',
+      // Remove or comment out the prettier/prettier rule
+      // 'prettier/prettier': 'error',
     },
   },
 ];

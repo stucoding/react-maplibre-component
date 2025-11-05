@@ -1,6 +1,24 @@
 import * as React from 'react';
 import { renderToString } from 'react-dom/server';
-import type { MapLibreMap } from 'maplibre-gl';
+
+// Define MapLibre map interface (maplibre-gl is loaded dynamically via script tag)
+// This works in both Vite builds and Framer environments
+interface MapLibreMap {
+  easeTo(options: {
+    center: [number, number];
+    bearing: number;
+    duration: number;
+    easing: (t: number) => number;
+    essential: boolean;
+  }): void;
+  flyTo(options: { center: [number, number]; zoom: number; duration: number }): void;
+  remove(): void;
+  on(event: string, handler: () => void): void;
+  once(event: string, handler: () => void): void;
+  addSource(id: string, source: { type: string; url?: string; tileSize?: number; maxzoom?: number }): void;
+  setTerrain(options: { source: string; exaggeration: number }): void;
+  addControl(control: { visualizePitch?: boolean } | Record<string, unknown>, position: string): void;
+}
 
 // Grouped configuration types for better organization
 export interface MapCameraConfig {
@@ -313,7 +331,7 @@ export const MapTiler3DMap: React.FC<MapTiler3DMapProps> = React.memo(
             if (!isRotating.current) return;
             bearing = (bearing + (animationConfig.rotationStep ?? 30)) % 360;
             map.easeTo({
-              center: cameraConfig.center,
+              center: cameraConfig.center ?? [0, 0],
               bearing,
               duration: rotationConfig.stepDuration ?? 12000,
               easing: (t: number) => t, // linear easing
