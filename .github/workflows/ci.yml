@@ -66,20 +66,19 @@ jobs:
         run: npm ci
 
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps
+        run: npx playwright install --with-deps chromium
 
-      - name: Build site for E2E
-        run: npm run build
+      - name: Build with coverage instrumentation
+        run: npm run build:coverage
 
-      - name: Start preview server
-        run: npm run preview &
-        env:
-          NODE_ENV: production
-
-      - name: Run Playwright tests with coverage
+      - name: Run Playwright tests
         env:
           CI: true
-        run: npx playwright test --reporter=html
+          NODE_V8_COVERAGE: ./coverage/tmp
+        run: npm run test:e2e
+
+      - name: Generate coverage report
+        run: npx nyc report --reporter=text --reporter=html --reporter=lcov --check-coverage --lines=90 --functions=90 --branches=90 --statements=90 || true
 
       - name: Upload Playwright report
         if: always()
@@ -88,13 +87,12 @@ jobs:
           name: playwright-report
           path: playwright-report/
 
-      # Optional: merge or publish coverage
-      - name: Upload Playwright coverage
+      - name: Upload coverage report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-coverage
-          path: playwright-coverage/
+          name: coverage-report
+          path: coverage/
 
   codeql:
     name: CodeQL Analysis

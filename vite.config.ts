@@ -1,10 +1,22 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import istanbul from 'vite-plugin-istanbul';
 import type { UserConfig } from 'vite';
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    istanbul({
+      include: 'src/*',
+      exclude: ['node_modules', 'src/tests', '**/*.test.ts', '**/*.spec.ts', '**/*.test.tsx', '**/*.spec.tsx'],
+      extension: ['.ts', '.tsx'],
+      requireEnv: false,
+    }),
+  ],
+  build: {
+    sourcemap: true, // Required for coverage mapping back to source
+  },
   test: {
     environment: 'jsdom',
     globals: true,
