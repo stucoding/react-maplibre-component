@@ -1,5 +1,5 @@
 import { chromium } from '@playwright/test';
-import { readFileSync, writeFileSync, mkdirSync } from 'fs';
+import { writeFileSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -26,7 +26,7 @@ async function collectCoverage() {
 
   // Stop coverage collection
   const jsCoverage = await page.coverage.stopJSCoverage();
-  const cssCoverage = await page.coverage.stopCSSCoverage();
+  //const cssCoverage = await page.coverage.stopCSSCoverage();
 
   await browser.close();
 

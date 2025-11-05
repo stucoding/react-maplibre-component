@@ -1,7 +1,12 @@
 import { test, expect } from '@playwright/test';
+import { collectCoverage } from './coverage';
 
 test('homepage loads and shows Vite + React', async ({ page }) => {
   test.setTimeout(60000); // give this test up to 60s total
+  
+  // Start coverage collection
+  const coverage = await collectCoverage(page);
+  
   await page.goto('/');
 
 
@@ -28,4 +33,6 @@ test('homepage loads and shows Vite + React', async ({ page }) => {
   // 5️⃣ (optional) Confirm that the title updated
   await expect(page).toHaveTitle(/Map/i);
   
+  // Stop coverage collection
+  await coverage.stop();
 });

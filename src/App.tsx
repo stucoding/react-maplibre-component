@@ -26,7 +26,7 @@ const defaultCamera: MapCameraConfig = {
   zoom: 12,
   pitch: 50,
   bearing: -90,
-}
+};
 
 function handleMarkerClick(point: MapPoint, index: number){
   console.log('Marker clicked:', point, index); 
