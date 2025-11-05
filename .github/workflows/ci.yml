@@ -51,7 +51,7 @@ jobs:
   test:
     name: Playwright Tests + Coverage
     runs-on: ubuntu-latest
-    needs: build
+    # Run independently - test builds its own version anyway
     steps:
       - name: Checkout
         uses: actions/checkout@v4
