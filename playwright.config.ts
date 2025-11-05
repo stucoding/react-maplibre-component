@@ -1,7 +1,7 @@
 import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
-  testDir: '.',
+  testDir: 'src/tests/e2e',
   use: {
     baseURL: 'http://localhost:4173', // vite preview default
     headless: true,
