@@ -334,7 +334,7 @@ export const MapTiler3DMap: React.FC<MapTiler3DMapProps> = React.memo(
         }
         if (mapObj.current) mapObj.current.remove();
       };
-    }, []);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Function to zoom the map to a point
     // Function to fly and open popup
