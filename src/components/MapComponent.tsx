@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { renderToString } from 'react-dom/server';
+import type { MapLibreMap } from 'maplibre-gl';
 
 // Grouped configuration types for better organization
 export interface MapCameraConfig {
@@ -89,7 +90,7 @@ export interface MapTiler3DMapProps {
 }
 
 export const MapTiler3DMap: React.FC<MapTiler3DMapProps> = React.memo(
-    function MapTiler3DMap({
+  function MapTiler3DMap({
     apiKey,
     points,
     mapName = 'outdoor',
@@ -107,7 +108,7 @@ export const MapTiler3DMap: React.FC<MapTiler3DMapProps> = React.memo(
     onMapReady,
   }) {
     const mapRef = React.useRef<HTMLDivElement>(null);
-    const mapObj = React.useRef<any>(null);
+    const mapObj = React.useRef<MapLibreMap>(null);
     const isRotating = React.useRef(false);
     const rotationTimeout = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -179,7 +180,7 @@ export const MapTiler3DMap: React.FC<MapTiler3DMapProps> = React.memo(
       document.head.appendChild(link);
 
       function initMap() {
-        // @ts-ignore
+        // @ts-expect-error - maplibregl is not typed
         const maplibregl = window.maplibregl;
         const map = new maplibregl.Map({
           container: mapRef.current!,
@@ -303,7 +304,7 @@ export const MapTiler3DMap: React.FC<MapTiler3DMapProps> = React.memo(
           );
         }
 
-        function startSmoothRotation(map: any) {
+        function startSmoothRotation(map: MapLibreMap) {
           if (isRotating.current) return;
           isRotating.current = rotationConfig.enabled ?? false;
 
@@ -328,7 +329,9 @@ export const MapTiler3DMap: React.FC<MapTiler3DMapProps> = React.memo(
       return () => {
         const scriptTag = document.querySelector('script[src*="maplibre-gl"]');
         if (scriptTag) scriptTag.remove();
-        if (rotationTimeout.current) {clearTimeout(rotationTimeout.current);}
+        if (rotationTimeout.current) {
+          clearTimeout(rotationTimeout.current);
+        }
         if (mapObj.current) mapObj.current.remove();
       };
     }, []);
@@ -512,5 +515,5 @@ export const MapTiler3DMap: React.FC<MapTiler3DMapProps> = React.memo(
       </>
     );
   },
-  () => true
+  () => true,
 );

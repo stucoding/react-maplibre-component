@@ -16,7 +16,7 @@ export async function collectCoverage(page: Page) {
       const sourceCoverage = jsCoverage.filter(
         (entry) =>
           entry.url.includes('localhost:4173') &&
-          (entry.url.includes('/src/') || entry.url.includes('/assets/'))
+          (entry.url.includes('/src/') || entry.url.includes('/assets/')),
       );
 
       // Create coverage directory
@@ -32,12 +32,11 @@ export async function collectCoverage(page: Page) {
             css: cssCoverage,
           },
           null,
-          2
-        )
+          2,
+        ),
       );
 
       return { js: sourceCoverage, css: cssCoverage };
     },
   };
 }
-

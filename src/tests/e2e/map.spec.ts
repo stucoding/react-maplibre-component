@@ -3,12 +3,11 @@ import { collectCoverage } from './coverage';
 
 test('homepage loads and shows Vite + React', async ({ page }) => {
   test.setTimeout(60000); // give this test up to 60s total
-  
+
   // Start coverage collection
   const coverage = await collectCoverage(page);
-  
-  await page.goto('/');
 
+  await page.goto('/');
 
   // 1️⃣ Check that the root container is visible
   await expect(page.locator('#root')).toBeVisible();
@@ -19,10 +18,10 @@ test('homepage loads and shows Vite + React', async ({ page }) => {
 
   // 3️⃣ Wait for overlay to fade out
   const overlay = page.locator('#map-overlay');
-  try{
+  try {
     await expect(overlay).toHaveCSS('opacity', '0', { timeout: 40000 });
-  } catch (error) {
-    const style = await overlay.evaluate(el => getComputedStyle(el).opacity);
+  } catch {
+    const style = await overlay.evaluate((el) => getComputedStyle(el).opacity);
     console.log('overlay opacity should be 0, but is:', style);
   }
 
@@ -32,7 +31,7 @@ test('homepage loads and shows Vite + React', async ({ page }) => {
 
   // 5️⃣ (optional) Confirm that the title updated
   await expect(page).toHaveTitle(/Map/i);
-  
+
   // Stop coverage collection
   await coverage.stop();
 });

@@ -26,4 +26,19 @@ export default [
       globals: globals.browser,
     },
   },
+  // Add Node.js configuration for .js files in scripts/
+  {
+    files: ['scripts/**/*.js', '**/*.config.js'],
+    plugins: {
+      prettier: prettierPlugin,
+    },
+    languageOptions: {
+      ecmaVersion: 2020,
+      globals: globals.node,
+      sourceType: 'module',
+    },
+    rules: {
+      'prettier/prettier': 'error',
+    },
+  },
 ];

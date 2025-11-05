@@ -9,7 +9,14 @@ export default defineConfig({
     react(),
     istanbul({
       include: 'src/*',
-      exclude: ['node_modules', 'src/tests', '**/*.test.ts', '**/*.spec.ts', '**/*.test.tsx', '**/*.spec.tsx'],
+      exclude: [
+        'node_modules',
+        'src/tests',
+        '**/*.test.ts',
+        '**/*.spec.ts',
+        '**/*.test.tsx',
+        '**/*.spec.tsx',
+      ],
       extension: ['.ts', '.tsx'],
       requireEnv: false,
     }),

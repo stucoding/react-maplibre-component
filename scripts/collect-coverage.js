@@ -36,7 +36,7 @@ async function collectCoverage() {
 
   // Convert to Istanbul format
   const coverageData = {
-    'total': {
+    total: {
       lines: { total: 0, covered: 0, skipped: 0, pct: 0 },
       statements: { total: 0, covered: 0, skipped: 0, pct: 0 },
       functions: { total: 0, covered: 0, skipped: 0, pct: 0 },
@@ -54,12 +54,11 @@ async function collectCoverage() {
 
   // Write coverage report
   writeFileSync(
-    join(coverageDir, 'coverage.json'),
-    JSON.stringify(coverageData, null, 2)
+    JSON.stringify(coverageDir, 'coverage.json'),
+    JSON.stringify(coverageData, null, 2),
   );
 
   console.log('Coverage collected and saved to coverage/coverage.json');
 }
 
 collectCoverage().catch(console.error);
-

@@ -28,15 +28,14 @@ const defaultCamera: MapCameraConfig = {
   bearing: -90,
 };
 
-function handleMarkerClick(point: MapPoint, index: number){
-  console.log('Marker clicked:', point, index); 
+function handleMarkerClick(point: MapPoint, index: number) {
+  console.log('Marker clicked:', point, index);
 }
-function handleMapReady() { 
-  console.log('Map is ready!'); 
+function handleMapReady() {
+  console.log('Map is ready!');
 }
 
 function App() {
-  
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
       <MapTiler3DMap
@@ -47,7 +46,7 @@ function App() {
         bgColor="#3b82f6"
         camera={defaultCamera}
         onMarkerClick={handleMarkerClick}
-        onMapReady={handleMapReady }
+        onMapReady={handleMapReady}
       />
     </div>
   );
