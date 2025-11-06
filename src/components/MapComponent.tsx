@@ -18,6 +18,8 @@ interface MapLibreMap {
   addSource(id: string, source: { type: string; url?: string; tileSize?: number; maxzoom?: number }): void;
   setTerrain(options: { source: string; exaggeration: number }): void;
   addControl(control: { visualizePitch?: boolean } | Record<string, unknown>, position: string): void;
+  setBearing(bearing: number): void; // Add this for direct bearing updates
+  getBearing(): number; // Add this to get current bearing
 }
 
 // Grouped configuration types for better organization
@@ -155,7 +157,7 @@ export const MapTiler3DMap: React.FC<MapTiler3DMapProps> = React.memo(
     };
 
     const animationConfig: MapAnimationConfig = {
-      flyToDuration: 1200,
+      flyToDuration: 2400,
       rotationStep: 30,
       ...animation,
     };
@@ -244,11 +246,11 @@ export const MapTiler3DMap: React.FC<MapTiler3DMapProps> = React.memo(
             const width =
               typeof markerConfig.width === 'number'
                 ? `${markerConfig.width}px`
-                : (markerConfig.width ?? '20px');
+                : markerConfig.width!;
             const height =
               typeof markerConfig.height === 'number'
                 ? `${markerConfig.height}px`
-                : (markerConfig.height ?? '20px');
+                : markerConfig.height!;
             el.style.width = width;
             el.style.height = height;
             el.style.backgroundImage = `url(${p.pin})`;
@@ -324,22 +326,40 @@ export const MapTiler3DMap: React.FC<MapTiler3DMapProps> = React.memo(
 
         function startSmoothRotation(map: MapLibreMap) {
           if (isRotating.current) return;
-          isRotating.current = rotationConfig.enabled ?? false;
+          isRotating.current = rotationConfig.enabled!;
 
-          let bearing = rotationConfig.initialBearing ?? -90;
+          const stepDuration = rotationConfig.stepDuration!;
+          const degreesPerStep = animationConfig.rotationStep!;
+          const fixedCenter = cameraConfig.center!;
+          const startBearing = rotationConfig.initialBearing!;
+          let currentBearing = startBearing;
+
           const step = () => {
-            if (!isRotating.current) return;
-            bearing = (bearing + (animationConfig.rotationStep ?? 30)) % 360;
+            if (!isRotating.current || !mapObj.current) {
+              return;
+            }
+
+            // Calculate next bearing
+            currentBearing = (currentBearing + degreesPerStep) % 360;
+
+            // Use easeTo with ONLY bearing change, keep center fixed
             map.easeTo({
-              center: cameraConfig.center ?? [0, 0],
-              bearing,
-              duration: rotationConfig.stepDuration ?? 12000,
+              center: fixedCenter,
+              bearing: currentBearing,
+              duration: stepDuration,
               easing: (t: number) => t, // linear easing
               essential: true,
             });
 
-            rotationTimeout.current = setTimeout(step, rotationConfig.stepDuration ?? 12000);
+            // Chain the next step when current animation completes
+            map.once('moveend', () => {
+              if (isRotating.current) {
+                rotationTimeout.current = setTimeout(step, 0); // Start next immediately
+              }
+            });
           };
+
+          // Start the rotation
           step();
         }
       }
@@ -348,7 +368,12 @@ export const MapTiler3DMap: React.FC<MapTiler3DMapProps> = React.memo(
         const scriptTag = document.querySelector('script[src*="maplibre-gl"]');
         if (scriptTag) scriptTag.remove();
         if (rotationTimeout.current) {
-          clearTimeout(rotationTimeout.current);
+          // Cancel animation frame if it's an animation frame ID
+          if (typeof rotationTimeout.current === 'number') {
+            cancelAnimationFrame(rotationTimeout.current);
+          } else {
+            clearTimeout(rotationTimeout.current);
+          }
         }
         if (mapObj.current) mapObj.current.remove();
       };
@@ -362,8 +387,8 @@ export const MapTiler3DMap: React.FC<MapTiler3DMapProps> = React.memo(
       // fly to marker
       mapObj.current.flyTo({
         center: [p.lng, p.lat],
-        zoom: 14,
-        duration: animationConfig.flyToDuration ?? 1200,
+        zoom: 15,
+        duration: animationConfig.flyToDuration!,
       });
 
       // open popup after flyTo
@@ -373,7 +398,7 @@ export const MapTiler3DMap: React.FC<MapTiler3DMapProps> = React.memo(
           // For now, we'll just call the callback
           onMarkerClick?.(p, i);
         },
-        (animationConfig.flyToDuration ?? 1200) - 200,
+        animationConfig.flyToDuration! - 200,
       );
 
       // hide side menu
@@ -426,7 +451,7 @@ export const MapTiler3DMap: React.FC<MapTiler3DMapProps> = React.memo(
             position: absolute;
             top: 0;
             left: 0;
-            width: ${uiConfig.sidebarWidth ?? 300}px;
+            width: ${uiConfig.sidebarWidth!}px;
             height: 100%;
             background: #fff;
             box-shadow: 4px 0 12px rgba(0,0,0,0.15);

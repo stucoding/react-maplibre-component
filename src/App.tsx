@@ -8,7 +8,7 @@ const samplePoints: MapPoint[] = [
     lng: 8.763649918607726,
     title: 'Swiss Alps',
     infoText: 'Beautiful mountain view in the Swiss Alps',
-    pin: 'https://api.maptiler.com/maps/dataviz/markers/pin-1.png',
+    pin: '/pins/map_active_mission.png',
     image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400',
   },
   {
@@ -17,7 +17,7 @@ const samplePoints: MapPoint[] = [
     lng: 9.01,
     title: 'Swiss Valley',
     infoText: 'Scenic valley location',
-    pin: 'https://api.maptiler.com/maps/dataviz/markers/pin-2.png',
+    pin: '/pins/map_invalid_location.png',
     image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400',
   },
 ];
@@ -39,9 +39,9 @@ function App() {
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
       <MapTiler3DMap
-        apiKey="ltzFbUmxmYsIaKJ0ybNR"
+        apiKey={import.meta.env.VITE_MAP_API_KEY || ''}
         points={samplePoints}
-        mapName="outdoor"
+        mapName="winter"
         rotating={true}
         bgColor="#3b82f6"
         camera={defaultCamera}
