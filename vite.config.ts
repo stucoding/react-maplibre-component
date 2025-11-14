@@ -21,6 +21,9 @@ export default defineConfig({
       requireEnv: false,
     }),
   ],
+  server: {
+    open: false, // Disable automatic browser opening
+  },
   build: {
     sourcemap: true, // Required for coverage mapping back to source
   },

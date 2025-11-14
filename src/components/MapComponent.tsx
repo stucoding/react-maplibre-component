@@ -41,11 +41,13 @@ export interface MapRotationConfig {
   speed?: number; // degrees per rotation step
   stepDuration?: number; // ms per step
   initialBearing?: number;
+  zoomLevel?: number; // 0 - tile entire world; 1 - ¼ of the world; 2 - 1⁄16
 }
 
 export interface MapAnimationConfig {
   flyToDuration?: number; // ms
   rotationStep?: number; // degrees
+  zoomLevel?: number; // 0 - tile entire world; 1 - ¼ of the world; 2 - 1⁄16
 }
 
 export interface MapStyleConfig {
@@ -60,6 +62,9 @@ export interface MapUIConfig {
   showFullscreen?: boolean;
   showSidebar?: boolean;
   sidebarWidth?: number;
+  listAlwaysVisible?: boolean;
+  locationListAlign?: 'left' | 'right';
+  listSize?: number;
 }
 
 export interface MapMarkerConfig {
@@ -159,14 +164,18 @@ export const MapTiler3DMap: React.FC<MapTiler3DMapProps> = React.memo(
     const animationConfig: MapAnimationConfig = {
       flyToDuration: 2400,
       rotationStep: 30,
+      zoomLevel: 16,
       ...animation,
     };
 
     const uiConfig: MapUIConfig = {
       showNavigation: true,
-      showFullscreen: true,
+      showFullscreen: false,
       showSidebar: true,
       sidebarWidth: 300,
+      listAlwaysVisible: false,
+      locationListAlign: 'left',
+      listSize: 320,
       ...ui,
     };
 
@@ -179,13 +188,18 @@ export const MapTiler3DMap: React.FC<MapTiler3DMapProps> = React.memo(
     const version = mapLibre?.version ?? '3.6.2';
     const mapLibreConfig: MapLibreConfig = {
       version,
-      scriptUrl:
-        mapLibre?.scriptUrl ?? `https://unpkg.com/maplibre-gl@${version}/dist/maplibre-gl.js`,
-      cssUrl: mapLibre?.cssUrl ?? `https://unpkg.com/maplibre-gl@${version}/dist/maplibre-gl.css`,
+      scriptUrl: mapLibre?.scriptUrl || `https://unpkg.com/maplibre-gl@${version}/dist/maplibre-gl.js`,
+      cssUrl: mapLibre?.cssUrl || `https://unpkg.com/maplibre-gl@${version}/dist/maplibre-gl.css`,
     };
 
     const [menuOpen, setMenuOpen] = React.useState(false);
     const [ready, setReady] = React.useState(false);
+
+    React.useEffect(() => {
+      if (uiConfig.listAlwaysVisible) {
+        setMenuOpen(false);
+      }
+    }, [uiConfig.listAlwaysVisible]);
 
     React.useEffect(() => {
       // Load MapLibre and CSS dynamically
@@ -202,18 +216,53 @@ export const MapTiler3DMap: React.FC<MapTiler3DMapProps> = React.memo(
       function initMap() {
         // @ts-expect-error - maplibregl is not typed
         const maplibregl = window.maplibregl;
-        const map = new maplibregl.Map({
-          container: mapRef.current!,
-          style: `https://api.maptiler.com/maps/${mapName}/style.json?key=${apiKey}`,
-          center: cameraConfig.center,
-          zoom: cameraConfig.zoom,
-          pitch: cameraConfig.pitch,
-          bearing: cameraConfig.bearing,
-          terrain: terrainConfig.enabled
-            ? { source: terrainConfig.source!, exaggeration: terrainConfig.exaggeration }
-            : undefined,
-        });
-        mapObj.current = map;
+        
+        // Ensure container exists and has dimensions
+        if (!mapRef.current) {
+          console.warn('Map container ref not available');
+          return;
+        }
+
+        const container = mapRef.current;
+        
+        // Wait a tick to ensure container has dimensions (important for Framer)
+        const tryInit = () => {
+          if (!container) return;
+          
+          const hasDimensions = container.offsetWidth > 0 && container.offsetHeight > 0;
+          
+          if (!hasDimensions) {
+            // Retry after a short delay
+            setTimeout(tryInit, 100);
+            return;
+          }
+          
+          // Calculate maxBounds for xkm radius around center
+          const [centerLng, centerLat] = cameraConfig.center!;
+          const radiusKm = 5;
+          // 1 degree latitude ≈ 111 km
+          const latOffset = radiusKm / 111;
+          // 1 degree longitude ≈ 111 km * cos(latitude)
+          const lngOffset = radiusKm / (111 * Math.cos((centerLat * Math.PI) / 180));
+          
+          const maxBounds: [[number, number], [number, number]] = [
+            [centerLng - lngOffset, centerLat - latOffset], // Southwest corner
+            [centerLng + lngOffset, centerLat + latOffset], // Northeast corner
+          ];
+          
+          const map = new maplibregl.Map({
+            container: container,
+            style: `https://api.maptiler.com/maps/${mapName}/style.json?key=${apiKey}`,
+            center: cameraConfig.center,
+            zoom: cameraConfig.zoom,
+            pitch: cameraConfig.pitch,
+            bearing: cameraConfig.bearing,
+            maxBounds, // Restrict map view to 2km radius
+            terrain: terrainConfig.enabled
+              ? { source: terrainConfig.source!, exaggeration: terrainConfig.exaggeration }
+              : undefined,
+          });
+          mapObj.current = map;
 
         map.on('load', () => {
           // Terrain DEM from MapTiler
@@ -235,7 +284,7 @@ export const MapTiler3DMap: React.FC<MapTiler3DMapProps> = React.memo(
             map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'top-right');
           }
 
-          // 💡 Optional: Fullscreen toggle
+          // 🖥️ Add fullscreen control if enabled
           if (uiConfig.showFullscreen) {
             map.addControl(new maplibregl.FullscreenControl(), 'top-left');
           }
@@ -257,7 +306,6 @@ export const MapTiler3DMap: React.FC<MapTiler3DMapProps> = React.memo(
             el.style.backgroundSize = 'contain';
             el.style.backgroundRepeat = 'no-repeat';
             el.style.transformOrigin = 'center';
-            //el.style.transition = "transform 0.2s ease-out"
 
             // Create popup content
             const pu = createInfoBlock(p);
@@ -293,8 +341,13 @@ export const MapTiler3DMap: React.FC<MapTiler3DMapProps> = React.memo(
           map.on('touchstart', stopRotation);
           map.on('wheel', stopRotation);
         });
+        };
+        
+        // Start initialization attempt
+        setTimeout(tryInit, 0);
+      }
 
-        function createInfoBlock(p: MapPoint) {
+      function createInfoBlock(p: MapPoint) {
           const img = p.image;
           const title = p.title;
           const infoText = p.infoText;
@@ -324,7 +377,7 @@ export const MapTiler3DMap: React.FC<MapTiler3DMapProps> = React.memo(
           );
         }
 
-        function startSmoothRotation(map: MapLibreMap) {
+      function startSmoothRotation(map: MapLibreMap) {
           if (isRotating.current) return;
           isRotating.current = rotationConfig.enabled!;
 
@@ -362,7 +415,6 @@ export const MapTiler3DMap: React.FC<MapTiler3DMapProps> = React.memo(
           // Start the rotation
           step();
         }
-      }
 
       return () => {
         const scriptTag = document.querySelector('script[src*="maplibre-gl"]');
@@ -380,30 +432,145 @@ export const MapTiler3DMap: React.FC<MapTiler3DMapProps> = React.memo(
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Function to zoom the map to a point
-    // Function to fly and open popup
     const handleViewPoint = (p: MapPoint, i: number) => {
       if (!mapObj.current) return;
 
       // fly to marker
       mapObj.current.flyTo({
         center: [p.lng, p.lat],
-        zoom: 15,
+        zoom: animationConfig.zoomLevel!,
         duration: animationConfig.flyToDuration!,
       });
 
       // open popup after flyTo
       setTimeout(
         () => {
-          // Note: markersRef would need to be created if you want to toggle popups
-          // For now, we'll just call the callback
           onMarkerClick?.(p, i);
         },
         animationConfig.flyToDuration! - 200,
       );
 
-      // hide side menu
-      setMenuOpen(false);
+      if (!uiConfig.listAlwaysVisible) {
+        setMenuOpen(false);
+      }
     };
+
+    const listSizeValue =
+      uiConfig.listSize ?? (typeof uiConfig.sidebarWidth === 'number' ? uiConfig.sidebarWidth : 300);
+    const listSizePx = `${listSizeValue}px`;
+    const showList = uiConfig.showSidebar !== false;
+    const listAlwaysVisible = uiConfig.listAlwaysVisible ?? false;
+    const align = uiConfig.locationListAlign ?? 'left';
+    const listOnRight = align === 'right';
+
+    const outerStyle: React.CSSProperties =
+      listAlwaysVisible && showList
+        ? {
+            position: 'relative',
+            display: 'flex',
+            flexDirection: listOnRight ? 'row-reverse' : 'row',
+            width: '100%',
+            height: '100%',
+            borderRadius: 20,
+            overflow: 'hidden',
+            background: '#000',
+          }
+        : {
+            position: 'relative',
+            width: '100%',
+            height: '100%',
+            borderRadius: 20,
+            overflow: 'hidden',
+            background: '#000',
+          };
+
+    const mapWrapperStyle: React.CSSProperties =
+      listAlwaysVisible && showList
+        ? {
+            flex: 1,
+            position: 'relative',
+            minWidth: 0,
+            minHeight: 0,
+          }
+        : {
+            position: 'absolute',
+            inset: 0,
+          };
+
+    const mapCanvasStyle: React.CSSProperties = {
+      position: 'absolute',
+      inset: 0,
+      width: '100%',
+      height: '100%',
+    };
+
+    const mapOverlayStyle: React.CSSProperties = {
+      position: 'absolute',
+      inset: 0,
+      background: '#f5f5f5',
+      transition: 'opacity 400ms ease',
+      opacity: ready ? 0 : 1,
+      pointerEvents: 'none',
+      borderRadius: listAlwaysVisible && showList ? 0 : 20,
+      zIndex: 1000,
+    };
+
+    const listContainerPinnedStyle: React.CSSProperties = {
+      background: '#fff',
+      display: 'flex',
+      flexDirection: 'column',
+      overflowY: 'auto',
+      width: listSizePx,
+      height: '100%',
+      borderRight: listOnRight ? undefined : '1px solid rgba(15, 23, 42, 0.08)',
+      borderLeft: listOnRight ? '1px solid rgba(15, 23, 42, 0.08)' : undefined,
+    };
+
+    const popupStyle: React.CSSProperties = {
+      position: 'absolute',
+      zIndex: 1100,
+      display: 'flex',
+      flexDirection: 'column',
+      background: '#fff',
+      overflowY: 'auto',
+      opacity: menuOpen ? 1 : 0,
+      pointerEvents: menuOpen ? 'auto' : 'none',
+      transition: 'transform 280ms ease, opacity 180ms ease',
+      boxShadow: '0 24px 60px rgba(15, 23, 42, 0.25)',
+      width: listSizePx,
+      height: '100%',
+      borderRadius: listOnRight ? '12px 0 0 12px' : '0 12px 12px 0',
+      top: 0,
+      [listOnRight ? 'right' : 'left']: 0,
+      transform: menuOpen
+        ? 'translateX(0)'
+        : listOnRight
+          ? 'translateX(100%)'
+          : 'translateX(-100%)',
+    };
+
+    const toggleButtonStyle: React.CSSProperties = {
+      position: 'absolute',
+      top: 10,
+      [listOnRight ? 'right' : 'left']: 10,
+      zIndex: 1200,
+    };
+
+    const listContent =
+      points.length > 0 ? (
+        <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {points.map((p, i) => (
+            <div key={p.id ?? i} className="menu-card">
+              {p.image && <img src={p.image} alt={p.title} />}
+              <h3>{p.title}</h3>
+              {p.infoText && <p>{p.infoText}</p>}
+              <button onClick={() => handleViewPoint(p, i)}>View</button>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div style={{ padding: 24, textAlign: 'center', color: '#6b7280' }}>No locations configured</div>
+      );
 
     return (
       <>
@@ -416,7 +583,6 @@ export const MapTiler3DMap: React.FC<MapTiler3DMapProps> = React.memo(
             --popup-text: ${style?.popupTextColor ?? '#fff'};
           }
 
-          /* MapLibre controls */
           .maplibregl-ctrl button {
             background-color: var(--map-button-bg) !important;
             border-radius: 6px !important;
@@ -430,12 +596,11 @@ export const MapTiler3DMap: React.FC<MapTiler3DMapProps> = React.memo(
           .maplibregl-ctrl button:hover {
             filter: brightness(1.2);
           }
-          .maplibregl-ctrl-group{
+          .maplibregl-ctrl-group {
             background-color: transparent !important;
             box-shadow: none !important;
           }
 
-          /* Popup styling */
           .maplibregl-popup-content {
             background: var(--map-button-bg) !important;
             font-family: sans-serif !important;
@@ -446,117 +611,83 @@ export const MapTiler3DMap: React.FC<MapTiler3DMapProps> = React.memo(
             border-top-color: var(--popup-bg) !important;
           }
 
-          /* Sidebar + button */
-          .side-menu {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: ${uiConfig.sidebarWidth!}px;
-            height: 100%;
-            background: #fff;
-            box-shadow: 4px 0 12px rgba(0,0,0,0.15);
-            overflow-y: auto;
-            transition: transform 0.35s ease;
-            z-index: 1100;
-          }
-          .side-menu.closed {
-            transform: translateX(-100%);
-          }
-          .side-menu img {
-            width: 100%;
-            border-radius: 0.5rem;
-          }
           .toggle-btn {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            z-index: 1200;
-            background: ${bgColor || '#333'};
-            color: white;
+            background: ${style?.buttonColor ?? bgColor};
+            color: #fff;
             border: none;
             border-radius: 6px;
             padding: 6px 10px;
             cursor: pointer;
-            transition: background 0.2s ease;
+            box-shadow: 0 14px 40px rgba(15, 23, 42, 0.35);
+            transition: transform 0.2s ease, filter 0.2s ease;
           }
           .toggle-btn:hover {
             filter: brightness(1.15);
+            transform: translateY(-1px);
           }
+
           .menu-card {
             padding: 12px;
-            border-bottom: 1px solid #eee;
+            border-radius: 10px;
+            background: #f9fafb;
+            border: 1px solid rgba(148, 163, 184, 0.25);
+            box-shadow: 0 10px 20px rgba(15, 23, 42, 0.08);
+          }
+          .menu-card img {
+            width: 100%;
+            border-radius: 8px;
+            margin-bottom: 8px;
           }
           .menu-card h3 {
-            margin: 8px 0 4px;
+            margin: 4px 0;
             font-size: 16px;
           }
           .menu-card p {
             font-size: 14px;
-            color: #555;
+            color: #4b5563;
+            margin: 4px 0 0;
           }
           .menu-card button {
-            background: ${bgColor || '#333'};
+            margin-top: 10px;
+            background: ${style?.buttonColor ?? bgColor};
             color: #fff;
             border: none;
-            border-radius: 4px;
+            border-radius: 6px;
             padding: 6px 10px;
             cursor: pointer;
-            margin-top: 8px;
           }
           .menu-card button:hover {
-            filter: brightness(1.2);
+            filter: brightness(1.15);
           }
         `}
         </style>
 
-        {/* Map Container */}
-        <div
-          ref={mapRef}
-          style={{
-            width: '100%',
-            height: '100%',
-            borderRadius: '20px',
-            overflow: 'hidden',
-          }}
-        />
-
-        {/* Overlay loader */}
-        <div
-          id="map-overlay"
-          style={{
-            position: 'absolute',
-            inset: 0,
-            background: '#f5f5f5',
-            transition: 'opacity 400ms ease',
-            opacity: ready ? 0 : 1,
-            pointerEvents: 'none',
-            borderRadius: 20,
-            zIndex: 1000,
-          }}
-        />
-
-        {/* Toggle button */}
-        {uiConfig.showSidebar && (
-          <button className="toggle-btn" onClick={() => setMenuOpen(!menuOpen)}>
-            {menuOpen ? '✕' : '☰'}
-          </button>
-        )}
-
-        {/* Sidebar menu */}
-        {uiConfig.showSidebar && (
-          <div className={`side-menu ${menuOpen ? '' : 'closed'}`}>
-            {points.map((p, i) => (
-              <div key={p.id ?? i} className="menu-card">
-                {p.image && <img src={p.image} alt={p.title} />}
-                <h3>{p.title}</h3>
-                {p.infoText && <p>{p.infoText}</p>}
-                <button onClick={() => handleViewPoint(p, i)}>View</button>
-              </div>
-            ))}
+        <div style={outerStyle}>
+          <div style={mapWrapperStyle}>
+            <div ref={mapRef} style={mapCanvasStyle} />
+            <div id="map-overlay" style={mapOverlayStyle} />
           </div>
-        )}
+
+          {listAlwaysVisible && showList ? (
+            <div style={listContainerPinnedStyle}>{listContent}</div>
+          ) : null}
+
+          {!listAlwaysVisible && showList ? (
+            <>
+              <button
+                className="toggle-btn"
+                style={toggleButtonStyle}
+                onClick={() => setMenuOpen((prev) => !prev)}
+              >
+                {menuOpen ? '✕' : '☰'}
+              </button>
+              <div style={popupStyle}>{listContent}</div>
+            </>
+          ) : null}
+        </div>
       </>
     );
   },
   () => true,
 );
+

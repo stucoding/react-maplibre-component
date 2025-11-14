@@ -6,18 +6,27 @@ const samplePoints: MapPoint[] = [
     id: '1',
     lat: 46.68006894117724,
     lng: 8.763649918607726,
-    title: 'Swiss Alps',
+    title: 'The Farmhouse',
     infoText: 'Beautiful mountain view in the Swiss Alps',
-    pin: '/pins/map_active_mission.png',
+    pin: '/public/pins/map_active_mission.png',
     image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400',
   },
   {
     id: '2',
-    lat: 46.51,
-    lng: 9.01,
-    title: 'Swiss Valley',
+    lat: 46.68506894117724,
+    lng: 8.768649918607726,
+    title: 'A Reataurant',
     infoText: 'Scenic valley location',
-    pin: '/pins/map_invalid_location.png',
+    pin: '/public/pins/map_invalid_location.png',
+    image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400',
+  },
+  {
+    id: '3',
+    lat: 46.67706894117724,
+    lng: 8.763649918607726,
+    title: 'The slope',
+    infoText: 'A ski slope',
+    pin: '/public/pins/map_invalid_location.png',
     image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400',
   },
 ];
@@ -41,7 +50,7 @@ function App() {
       <MapTiler3DMap
         apiKey={import.meta.env.VITE_MAP_API_KEY || ''}
         points={samplePoints}
-        mapName="winter"
+        mapName="winter-v2"
         rotating={true}
         bgColor="#3b82f6"
         camera={defaultCamera}
